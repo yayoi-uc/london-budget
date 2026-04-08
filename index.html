@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>London Budget — Cash Flow</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #F7F5F2;
+  --white:     #FFFFFF;
+  --border:    #E2DDD7;
+  --border-dk: #C8C0B6;
+  --text:      #1C1917;
+  --muted:     #8C867E;
+  --faint:     #B8B2AA;
+  --pos:       #3D5C38;
+  --neg:       #7A3535;
+  --warn:      #7A6028;
+  --accent:    #1C1917;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ─── UI要素のみ Inter に戻す ─── */
+.nav-btn, .rate-btn, .rate-btn .rsub, .label,
+.area-tag, .area-best-mark, .area-col-sub,
+.area-disp-label, .area-disp-jpy, .area-line,
+.header-meta, .income-row .ilabel, .income-row .iconv,
+.chart-lbl, .mx-sub, .mx-jpy, .t-sum-lbl,
+.filt-btn, .add-entry-btn, .month-btn, .asel-btn,
+.m-cancel, .m-save, .type-opt, .mform-label, .mform-input, .mform-select,
+.fixed-section-title, .fixed-row-sub, .fixed-banner-btn,
+.fixed-banner-title, .fixed-banner-sub, .fixed-pfx,
+.e-cat, .e-date, .exp-note-cell, .rsub, .rate-note,
+.empty-block, .mx-legend span, table th,
+.filter-row button, .tracker-top button,
+.modal-actions button { font-family: 'Inter', sans-serif; }
+
+/* ─── LAYOUT ─── */
+.page { max-width: 1080px; margin: 0 auto; padding: 0 32px 80px; }
+
+/* ─── HEADER ─── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 40px 0 28px;
+  margin-bottom: 48px;
+}
+.header-inner { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--text);
+}
+.header-title em { font-style: italic; font-weight: 300; color: var(--muted); }
+.header-meta { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.8; }
+.header-meta strong { color: var(--text); }
+
+/* ─── SECTION LABEL ─── */
+.label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 16px;
+  display: block;
+}
+
+/* ─── NAV TABS ─── */
+.nav { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 48px; gap: 0; }
+.nav-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  margin-bottom: -1px;
+  padding: 12px 24px 12px 0;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--text); border-bottom-color: var(--text); }
+
+/* ─── TAB PANELS ─── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ─── RATE STRIP ─── */
+.rate-strip {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--white);
+  margin-bottom: 40px;
+}
+.rate-btn {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  transition: all 0.2s;
+  text-align: left;
+}
+.rate-btn:last-child { border-right: none; }
+.rate-btn .rbig { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 500; display: block; color: var(--text); margin-top: 4px; }
+.rate-btn .rsub { display: block; margin-top: 2px; font-size: 0.65rem; color: var(--faint); }
+.rate-btn.active { background: var(--text); color: rgba(255,255,255,0.6); }
+.rate-btn.active .rbig { color: #fff; }
+.rate-btn.active .rsub { color: rgba(255,255,255,0.4); }
+
+/* ─── INCOME ROW ─── */
+.income-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+  margin-bottom: 48px;
+  flex-wrap: wrap; gap: 8px;
+}
+.income-row .ilabel { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.income-row .ijpy { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 400; color: var(--text); }
+.income-row .iconv { font-size: 0.72rem; color: var(--muted); margin: 0 12px; }
+.income-row .igbp { font-family: 'Cormorant Garamond', serif; font-size: 2.6rem; font-weight: 500; color: var(--text); transition: all 0.3s; }
+
+/* ─── AREA GRID ─── */
+.area-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 48px; }
+@media (max-width: 720px) { .area-grid { grid-template-columns: 1fr; } }
+
+.area-col {
+  background: var(--white);
+  padding: 32px 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+.area-col:hover { background: #FEFDFB; }
+.area-col.active { background: var(--text); }
+
+.area-tag {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--faint); margin-bottom: 20px; display: block;
+}
+.area-col.active .area-tag { color: rgba(255,255,255,0.4); }
+
+.area-col-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 400;
+  color: var(--text); margin-bottom: 4px;
+}
+.area-col.active .area-col-name { color: #fff; }
+
+.area-col-sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 28px; }
+.area-col.active .area-col-sub { color: rgba(255,255,255,0.45); }
+
+.area-lines { border-top: 1px solid var(--border); }
+.area-col.active .area-lines { border-top-color: rgba(255,255,255,0.12); }
+
+.area-line {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.area-col.active .area-line { border-bottom-color: rgba(255,255,255,0.08); }
+.area-line:last-child { border-bottom: none; }
+.aline-label { color: var(--muted); }
+.area-col.active .aline-label { color: rgba(255,255,255,0.5); }
+.aline-val { font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.area-col.active .aline-val { color: rgba(255,255,255,0.85); }
+.aline-val.total { color: var(--neg); }
+.area-col.active .aline-val.total { color: #f09090; }
+
+.area-disp {
+  margin-top: 20px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--border-dk);
+}
+.area-col.active .area-disp { border-top-color: rgba(255,255,255,0.2); }
+.area-disp-label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.area-col.active .area-disp-label { color: rgba(255,255,255,0.4); }
+.area-disp-gbp { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 500; }
+.area-disp-jpy { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.area-col.active .area-disp-jpy { color: rgba(255,255,255,0.4); }
+
+.area-best-mark {
+  position: absolute; top: 16px; right: 16px;
+  font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--pos);
+  border: 1px solid currentColor;
+  padding: 2px 8px; border-radius: 2px;
+}
+.area-col.active .area-best-mark { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
+
+/* ─── FIXED COSTS BANNER ─── */
+.fixed-banner {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  background: var(--white);
+  padding: 20px 24px;
+  margin-bottom: 48px;
+  display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+}
+.fixed-banner-icon { font-size: 1.2rem; margin-top: 1px; }
+.fixed-banner-text { flex: 1; }
+.fixed-banner-title { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.fixed-banner-sub { font-size: 0.75rem; color: var(--muted); }
+.fixed-banner-btn {
+  border: 1px solid var(--border-dk);
+  background: none; color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 8px 16px; border-radius: 2px;
+  cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  align-self: center;
+}
+.fixed-banner-btn:hover { background: var(--text); color: var(--white); }
+
+/* ─── DETAIL PANEL ─── */
+.detail-grid { display: grid; grid-template-columns: 1fr 320px; gap: 40px; }
+@media (max-width: 800px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.area-selector-strip { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+.asel-btn {
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); background: none; border: none;
+  border-bottom: 1.5px solid transparent; margin-bottom: -1px;
+  padding: 10px 20px 10px 0; cursor: pointer; transition: all 0.2s;
+}
+.asel-btn.active { color: var(--text); border-bottom-color: var(--text); }
+
+.exp-table { width: 100%; border-collapse: collapse; }
+.exp-table th {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--faint); text-align: left; padding: 0 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+.exp-table th:last-child { text-align: right; }
+.exp-row td { padding: 11px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.exp-row:last-child td { border-bottom: none; }
+.exp-ico { font-size: 1rem; padding-right: 10px; }
+.exp-name-cell { font-size: 0.83rem; color: var(--text); }
+.exp-note-cell { font-size: 0.72rem; color: var(--faint); margin-top: 1px; }
+.exp-tbd { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warn); background: rgba(122,96,40,0.08); border: 1px solid rgba(122,96,40,0.2); border-radius: 2px; padding: 1px 5px; margin-left: 6px; }
+
+.exp-input-wrap { text-align: right; }
+.exp-input {
+  width: 90px; text-align: right;
+  background: none; border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text); font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; font-weight: 500;
+  padding: 2px 4px; font-variant-numeric: tabular-nums;
+  transition: border-color 0.2s;
+}
+.exp-input:focus { outline: none; border-bottom-color: var(--text); }
+.exp-input.tbd-val { color: var(--faint); }
+.exp-prefix { font-size: 0.78rem; color: var(--muted); margin-right: 4px; }
+
+.totals-block { margin-top: 24px; border-top: 1px solid var(--border-dk); }
+.total-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.total-row:last-child { border-bottom: none; }
+.total-lbl { font-size: 0.75rem; color: var(--muted); }
+.total-amt {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 500; font-variant-numeric: tabular-nums;
+}
+.total-amt.neg { color: var(--neg); }
+.total-amt.pos { color: var(--pos); }
+
+.chart-stack { display: flex; flex-direction: column; gap: 32px; }
+.chart-block {}
+.chart-lbl { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 16px; }
+.chart-wrap { position: relative; height: 200px; }
+
+/* ─── MATRIX ─── */
+.mx-table { width: 100%; border-collapse: collapse; }
+.mx-table th, .mx-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  text-align: right;
+}
+.mx-table th { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); background: var(--white); }
+.mx-table th:first-child, .mx-table td:first-child { text-align: left; }
+.mx-table tr:last-child td { border-bottom: none; }
+.mx-table tr:hover td { background: #FEFDFB; }
+.mx-area { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+.mx-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.mx-val { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 500; display: block; }
+.mx-jpy { font-size: 0.7rem; color: var(--faint); }
+.mx-pos { color: var(--pos); }
+.mx-warn { color: var(--warn); }
+.mx-neg { color: var(--neg); }
+.mx-best td { background: rgba(61,92,56,0.05) !important; }
+.mx-worst td { background: rgba(122,53,53,0.05) !important; }
+
+.mx-legend { display: flex; gap: 24px; margin-top: 16px; }
+.mx-legend span { font-size: 0.72rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot.pos { background: var(--pos); }
+.dot.neg { background: var(--neg); }
+
+/* ─── TRACKER ─── */
+.tracker-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; }
+.month-ctrl { display: flex; align-items: center; gap: 12px; }
+.month-label { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; }
+.month-btn {
+  width: 32px; height: 32px; border: 1px solid var(--border);
+  background: var(--white); color: var(--text); font-size: 0.9rem;
+  cursor: pointer; border-radius: 2px; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.month-btn:hover { background: var(--text); color: var(--white); }
+
+.add-entry-btn {
+  border: 1px solid var(--text);
+  background: var(--text); color: var(--white);
+  font-family: 'Inter', sans-serif; font-size: 0.72rem;
+  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 10px 20px; cursor: pointer; transition: all 0.2s;
+  border-radius: 2px;
+}
+.add-entry-btn:hover { background: var(--bg); color: var(--text); }
+
+.t-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 32px; }
+@media (max-width: 640px) { .t-summary { grid-template-columns: repeat(2, 1fr); } }
+.t-sum-item { background: var(--white); padding: 20px; }
+.t-sum-lbl { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+.t-sum-val { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 400; }
+.t-sum-val.pos { color: var(--pos); }
+.t-sum-val.neg { color: var(--neg); }
+.t-sum-val.warn { color: var(--warn); }
+
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.filt-btn {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid var(--border); background: var(--white); color: var(--muted);
+  padding: 6px 14px; border-radius: 2px; cursor: pointer; transition: all 0.2s;
+}
+.filt-btn.active { background: var(--text); border-color: var(--text); color: var(--white); }
+.filt-btn:hover:not(.active) { border-color: var(--border-dk); color: var(--text); }
+
+.entries-table { width: 100%; border-collapse: collapse; }
+.entries-table th { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); text-align: left; padding: 0 0 12px; border-bottom: 1px solid var(--border); }
+.entries-table th:last-child, .entries-table th:nth-child(4) { text-align: right; }
+.entries-table td { padding: 13px 0; border-bottom: 1px solid var(--border); font-size: 0.83rem; vertical-align: middle; }
+.entries-table tr:last-child td { border-bottom: none; }
+.entries-table tr:hover td { background: #FEFDFB; }
+.e-ico { font-size: 1rem; padding-right: 10px; }
+.e-name { font-weight: 500; }
+.e-cat { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.e-date { color: var(--muted); }
+.e-amt { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+.e-amt.pos { color: var(--pos); }
+.e-amt.neg { color: var(--neg); }
+.e-del { text-align: right; }
+.e-del button { background: none; border: none; color: var(--faint); cursor: pointer; opacity: 0; transition: opacity 0.2s; font-size: 0.8rem; padding: 4px; }
+.entries-table tr:hover .e-del button { opacity: 1; }
+.e-del button:hover { color: var(--neg); }
+
+.empty-block { text-align: center; padding: 60px 0; color: var(--muted); font-size: 0.85rem; }
+.empty-block .e-icon { font-size: 2rem; margin-bottom: 12px; }
+
+/* ─── MODAL ─── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(28,25,23,0.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.overlay.open { display: flex; }
+.modal {
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 40px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+}
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; margin-bottom: 28px; }
+.mform-group { margin-bottom: 20px; }
+.mform-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 8px; }
+.mform-input, .mform-select {
+  width: 100%; padding: 10px 0;
+  border: none; border-bottom: 1px solid var(--border);
+  background: none; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+.mform-input:focus, .mform-select:focus { outline: none; border-bottom-color: var(--text); }
+.mform-select option { background: var(--white); }
+.type-row { display: flex; gap: 8px; }
+.type-opt {
+  flex: 1; padding: 10px; border: 1px solid var(--border);
+  background: none; color: var(--muted); font-family: 'Inter', sans-serif;
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s; border-radius: 2px;
+}
+.type-opt.active.inc { border-color: var(--pos); color: var(--pos); background: rgba(61,92,56,0.05); }
+.type-opt.active.exp { border-color: var(--neg); color: var(--neg); background: rgba(122,53,53,0.05); }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 28px; }
+.m-cancel { flex: 1; padding: 12px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
+.m-cancel:hover { border-color: var(--border-dk); color: var(--text); }
+.m-save { flex: 2; padding: 12px; border: none; background: var(--text); color: var(--white); font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 2px; }
+.m-save:hover { background: #3A3632; }
+
+/* ─── FIXED COST MODAL ─── */
+.fixed-modal {
+  background: var(--white); border: 1px solid var(--border);
+  padding: 40px; width: 100%; max-width: 520px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+  max-height: 90vh; overflow-y: auto;
+}
+.fixed-section-title { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin: 24px 0 12px; border-top: 1px solid var(--border); padding-top: 20px; }
+.fixed-section-title:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+.fixed-row { display: grid; grid-template-columns: 1fr 120px; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.fixed-row:last-child { border-bottom: none; }
+.fixed-row-label { font-size: 0.82rem; color: var(--text); }
+.fixed-row-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.fixed-input-wrap { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.fixed-input {
+  width: 80px; text-align: right;
+  background: none; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem; font-weight: 500; padding: 4px;
+  transition: border-color 0.2s;
+}
+.fixed-input:focus { outline: none; border-bottom-color: var(--text); }
+.fixed-input::placeholder { color: var(--faint); font-style: italic; }
+.fixed-pfx { font-size: 0.75rem; color: var(--muted); }
+
+/* ─── UTILS ─── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.4s ease both; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="header-title">London <em>Budget</em></div>
+      </div>
+      <div class="header-meta">
+        <strong>YMS Visa</strong> · Remote · 業務委託<br>
+        Shoreditch / SOHO Works
+      </div>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchPanel('sim', this)">Simulation</button>
+    <button class="nav-btn" onclick="switchPanel('detail', this)">Breakdown</button>
+    <button class="nav-btn" onclick="switchPanel('matrix', this)">Matrix</button>
+    <button class="nav-btn" onclick="switchPanel('tracker', this)">Ledger</button>
+  </nav>
+
+  <!-- ══════════ SIMULATION ══════════ -->
+  <div id="panel-sim" class="panel active fade-up">
+
+    <!-- Rate -->
+    <span class="label">為替レートシナリオ — 2026年予測</span>
+    <div class="rate-strip">
+      <button class="rate-btn" id="rbtn-pos" onclick="setRate('pos')">
+        円高シナリオ
+        <span class="rbig">¥170 <span style="font-size:1rem;color:inherit">/£</span></span>
+        <span class="rsub">日銀利上げ・ドル安局面</span>
+      </button>
+      <button class="rate-btn active" id="rbtn-base" onclick="setRate('base')">
+        ベースライン
+        <span class="rbig">¥190 <span style="font-size:1rem;color:inherit">/£</span></span>
+        <span class="rsub">2026年市場コンセンサス</span>
+      </button>
+      <button class="rate-btn" id="rbtn-neg" onclick="setRate('neg')">
+        円安シナリオ
+        <span class="rbig">¥215 <span style="font-size:1rem;color:inherit">/£</span></span>
+        <span class="rsub">米金利高止まり継続</span>
+      </button>
+    </div>
+
+    <!-- Income -->
+    <div class="income-row">
+      <div>
+        <div class="ilabel">月収（業務委託・手取り前）</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
+          <span class="ijpy">¥800,000</span>
+          <span class="iconv">→</span>
+          <span class="igbp" id="igbp">£4,211</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="ilabel" style="margin-bottom:4px">適用レート</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400" id="rate-applied">¥190 / £1</div>
+      </div>
+    </div>
+
+    <!-- Fixed costs banner -->
+    <div class="fixed-banner" id="fixed-banner">
+      <div class="fixed-banner-icon">⚠</div>
+      <div class="fixed-banner-text">
+        <div class="fixed-banner-title">固定費が未入力です</div>
+        <div class="fixed-banner-sub">日本側の支出（年金・保険・通信・サブスク等）を入力すると、より正確なシミュレーションができます。現在は London 現地費用のみで計算中。</div>
+      </div>
+      <button class="fixed-banner-btn" onclick="openFixedModal()">固定費を入力する</button>
+    </div>
+
+    <!-- Areas -->
+    <span class="label">居住エリア比較 — クリックで選択</span>
+    <div class="area-grid" id="area-grid"></div>
+
+    <!-- Cash Flow -->
+    <div style="margin-top:56px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <span class="label" style="margin-bottom:0">年間キャッシュフロー予測 — 2026（選択エリアで計算）</span>
+        <span style="font-size:0.72rem;color:var(--muted)">旅行費は円建て予算をレートで換算</span>
+      </div>
+      <div id="cf-table-wrap"></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ BREAKDOWN ══════════ -->
+  <div id="panel-detail" class="panel">
+    <div class="detail-grid">
+      <div>
+        <div class="area-selector-strip" id="area-selector"></div>
+        <div id="exp-editor"></div>
+      </div>
+      <div class="chart-stack">
+        <div class="chart-block">
+          <div class="chart-lbl">支出内訳</div>
+          <div class="chart-wrap"><canvas id="donut-chart"></canvas></div>
+        </div>
+        <div class="chart-block">
+          <div class="chart-lbl">収入 vs 支出 vs 手取り</div>
+          <div class="chart-wrap"><canvas id="bar-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ MATRIX ══════════ -->
+  <div id="panel-matrix" class="panel">
+    <span class="label">エリア × 為替シナリオ — 月間手取りマトリクス</span>
+    <div style="border:1px solid var(--border);background:var(--white)">
+      <table class="mx-table" id="mx-table"></table>
+    </div>
+    <div class="mx-legend">
+      <span><span class="dot pos"></span>ベスト（最高手取り）</span>
+      <span><span class="dot neg"></span>ワースト（最低手取り）</span>
+      <span style="color:var(--faint)">手取り ＝ GBP収入 − 月間支出合計</span>
+    </div>
+  </div>
+
+  <!-- ══════════ TRACKER ══════════ -->
+  <div id="panel-tracker" class="panel">
+    <div class="tracker-top">
+      <div class="month-ctrl">
+        <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="month-label" id="month-label">2026年4月</div>
+        <button class="month-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <button class="add-entry-btn" onclick="openEntryModal()">＋ 記録を追加</button>
+    </div>
+    <div class="t-summary" id="t-summary"></div>
+    <div class="filter-row" id="filter-row"></div>
+    <div id="entries-area"></div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ─── ENTRY MODAL ─── -->
+<div class="overlay" id="entry-overlay">
+  <div class="modal">
+    <div class="modal-title">記録を追加</div>
+    <div class="mform-group">
+      <label class="mform-label">種別</label>
+      <div class="type-row">
+        <button class="type-opt inc active" id="type-inc" onclick="setEntryType('inc')">収入</button>
+        <button class="type-opt exp" id="type-exp" onclick="setEntryType('exp')">支出</button>
+      </div>
+    </div>
+    <div class="mform-group">
+      <label class="mform-label">カテゴリ</label>
+      <select class="mform-select" id="e-cat">
+        <option value="収入">収入</option>
+        <option value="家賃">家賃</option>
+        <option value="食費">食費</option>
+        <option value="外食">外食</option>
+        <option value="交通費">交通費</option>
+        <option value="ワーキングスペース">ワーキングスペース</option>
+        <option value="光熱費">光熱費</option>
+        <option value="通信費">通信費</option>
+        <option value="エンタメ">エンタメ</option>
+        <option value="日本側固定費">日本側固定費</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="mform-group">
+      <label class="mform-label">メモ（任意）</label>
+      <input class="mform-input" id="e-name" type="text" placeholder="例：SOHO Works 4月分">
+    </div>
+    <div class="mform-group">
+      <label class="mform-label">金額（£）</label>
+      <input class="mform-input" id="e-amount" type="number" step="0.01" min="0" placeholder="0.00">
+    </div>
+    <div class="mform-group">
+      <label class="mform-label">日付</label>
+      <input class="mform-input" id="e-date" type="date">
+    </div>
+    <div class="modal-actions">
+      <button class="m-cancel" onclick="closeEntryModal()">キャンセル</button>
+      <button class="m-save" onclick="saveEntry()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FIXED COST MODAL ─── -->
+<div class="overlay" id="fixed-overlay">
+  <div class="fixed-modal">
+    <div class="modal-title">固定費を入力</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px">わかる範囲で入力してください。空欄はシミュレーションに含まれません。</div>
+
+    <div class="fixed-section-title">🇯🇵 日本側固定費（円建て → 自動換算）</div>
+    <div id="jp-fixed-rows"></div>
+
+    <div class="fixed-section-title">🇬🇧 UK現地 追加固定費（£）</div>
+    <div id="uk-fixed-rows"></div>
+
+    <div class="modal-actions" style="margin-top:24px">
+      <button class="m-cancel" onclick="closeFixedModal()">キャンセル</button>
+      <button class="m-save" onclick="saveFixedCosts()">保存してシミュレーションに反映</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════════════
+const INCOME_JPY = 800000;
+
+const RATES = {
+  pos:  { val: 170, label: '円高', desc: '¥170/£' },
+  base: { val: 190, label: 'ベースライン', desc: '¥190/£' },
+  neg:  { val: 215, label: '円安', desc: '¥215/£' },
+};
+
+const AREAS = {
+  zone1: {
+    name: 'Zone 1',
+    sub: 'Shoreditch・East London',
+    tag: 'ZONE 1',
+    expenses: {
+      rent:      { lbl: '家賃', note: 'シェアハウス・Shoreditch周辺', ico: '🏠', val: 950 },
+      workspace: { lbl: 'SOHO Works', note: 'Shoreditch 月額メンバー（週5）', ico: '💻', val: 300, locked: true },
+      transport: { lbl: '交通費', note: 'Oyster・近距離のみ', ico: '🚇', val: 50 },
+      groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 350 },
+      dining:    { lbl: '外食・カフェ', note: 'Shoreditch周辺（高め）', ico: '🍜', val: 200 },
+      phone:     { lbl: '通信費（UK）', note: 'SIM only', ico: '📱', val: 30 },
+      utilities: { lbl: '光熱費・Wi-Fi', note: 'シェアハウス込みの場合あり', ico: '💡', val: 80 },
+      entertain: { lbl: 'エンタメ・人脈', note: 'イベント・ネットワーキング', ico: '🎭', val: 150 },
+      misc:      { lbl: '雑費', note: '衛生用品・突発出費', ico: '📦', val: 100 },
+    }
+  },
+  zone3: {
+    name: 'Zone 3',
+    sub: '郊外・Overground圏',
+    tag: 'ZONE 3',
+    expenses: {
+      rent:      { lbl: '家賃', note: 'シェアハウス・Zone 3相場', ico: '🏠', val: 800 },
+      workspace: { lbl: 'SOHO Works', note: 'Shoreditch 月額メンバー（週5）', ico: '💻', val: 300, locked: true },
+      transport: { lbl: '交通費（定期）', note: 'Zone 1-3 Travelcard 月額', ico: '🚇', val: 175 },
+      groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 320 },
+      dining:    { lbl: '外食・カフェ', note: 'ランチ中心', ico: '🍜', val: 180 },
+      phone:     { lbl: '通信費（UK）', note: 'SIM only', ico: '📱', val: 30 },
+      utilities: { lbl: '光熱費・Wi-Fi', note: '別途請求が多い', ico: '💡', val: 65 },
+      entertain: { lbl: 'エンタメ・人脈', note: 'イベント・ネットワーキング', ico: '🎭', val: 150 },
+      misc:      { lbl: '雑費', note: '衛生用品・突発出費', ico: '📦', val: 100 },
+    }
+  },
+  pymmes: {
+    name: 'Pymmes Green',
+    sub: '69 Pymmes Green Rd · N11',
+    tag: 'N11 · ZONE 3–4',
+    expenses: {
+      rent:      { lbl: '家賃（この物件）', note: '69 Pymmes Green Rd（内装◎）', ico: '🏠', val: 800 },
+      workspace: { lbl: 'SOHO Works', note: 'Shoreditch 月額メンバー（週5）', ico: '💻', val: 300, locked: true },
+      transport: { lbl: '交通費（定期）', note: 'Zone 1-4 Travelcard 月額', ico: '🚇', val: 205 },
+      groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 310 },
+      dining:    { lbl: '外食・カフェ', note: 'ランチ中心', ico: '🍜', val: 170 },
+      phone:     { lbl: '通信費（UK）', note: 'SIM only', ico: '📱', val: 30 },
+      utilities: { lbl: '光熱費・Wi-Fi', note: '別途請求が多い', ico: '💡', val: 65 },
+      entertain: { lbl: 'エンタメ・人脈', note: 'イベント・ネットワーキング', ico: '🎭', val: 150 },
+      misc:      { lbl: '雑費', note: '衛生用品・突発出費', ico: '📦', val: 100 },
+    }
+  }
+};
+
+// Fixed costs (JP = JPY, UK = GBP)
+const JP_FIXED = [
+  // ── 社会保険・税金 ──
+  { id: 'nenkin',      lbl: '国民年金',       note: '令和6年度 月額（固定）',                      val: 16980, group: '社会保険・税金' },
+  { id: 'kokuho',      lbl: '国民健康保険',   note: '前年所得¥600万 東京区部試算 ¥758,950/年÷12',  val: 63000, group: '社会保険・税金' },
+  { id: 'income_tax',  lbl: '所得税・住民税', note: '月収¥40万ベース概算（所得税¥37k+住民税¥36k）', val: 73400, group: '社会保険・税金' },
+  // ── 通信 ──
+  { id: 'jp_phone',    lbl: '日本の携帯',     note: '月額固定',                                    val: 3754,  group: '通信' },
+  // ── サブスク ──
+  { id: 'claude',      lbl: 'Claude Pro',     note: '$20/月 ≈ ¥3,000（現在契約中）',               val: 3000,  group: 'サブスク' },
+  { id: 'chatgpt',     lbl: 'ChatGPT Plus',   note: '$20/月 ≈ ¥3,000（最安プラン）',               val: 3000,  group: 'サブスク' },
+  { id: 'freee',       lbl: 'freee',          note: '確定申告プラン 月額',                          val: 2156,  group: 'サブスク' },
+  // ── 保険・ローン ──
+  { id: 'insurance',   lbl: 'ジブラルタ生命', note: '固定',                                        val: 27000, group: '保険・ローン' },
+  { id: 'scholarship', lbl: '奨学金',         note: '日本学生支援機構 月額',                        val: 14222, group: '保険・ローン' },
+  // ── その他 ──
+  { id: 'pilates',     lbl: 'ピラティス',     note: '日本引き落とし',                               val: 10000, group: 'その他' },
+];
+const UK_FIXED = [
+  { id: 'uk_insurance', lbl: '保険（旅行・荷物）', note: '任意',    val: 0 },
+  { id: 'uk_gym',       lbl: 'ジム・スポーツ', note: '任意',       val: 0 },
+  { id: 'uk_sub',       lbl: 'サブスク等（UK）', note: '動画配信など', val: 0 },
+  { id: 'uk_other',     lbl: 'その他（£）', note: '自由入力',      val: 0 },
+];
+
+const PLANNED = [
+  { month: 5, lbl: 'コペンハーゲン旅行', emoji: '🇩🇰', jpy: 200000 },
+  { month: 6, lbl: 'スリランカ旅行',     emoji: '🇱🇰', jpy: 250000 },
+  { month: 8, lbl: 'シチリア旅行',       emoji: '🇮🇹', jpy: 200000 },
+];
+
+let currentRate = 'base';
+let selectedArea = 'zone1';
+let currentFilter = 'all';
+let entryType = 'inc';
+let currentMonth = new Date(2026, 3, 1);
+let donutChart = null, barChart = null;
+
+// ═══════════════════════════════════════════════
+//  COMPUTED
+// ═══════════════════════════════════════════════
+function rateVal(k) { return RATES[k || currentRate].val; }
+function incomeGBP(k) { return INCOME_JPY / rateVal(k); }
+
+function jpFixedGBP(k) {
+  const r = rateVal(k);
+  return JP_FIXED.reduce((s, f) => s + (f.val || 0) / r, 0);
+}
+function ukFixedGBP() {
+  return UK_FIXED.reduce((s, f) => s + (f.val || 0), 0);
+}
+function totalFixed(k) { return jpFixedGBP(k) + ukFixedGBP(); }
+
+function localExpenses(areaKey) {
+  return Object.values(AREAS[areaKey].expenses).reduce((s, e) => s + (e.val || 0), 0);
+}
+function totalExpenses(areaKey, rateKey) {
+  return localExpenses(areaKey) + totalFixed(rateKey || currentRate);
+}
+function disposable(areaKey, rateKey) {
+  return incomeGBP(rateKey) - totalExpenses(areaKey, rateKey);
+}
+function disposableJPY(areaKey, rateKey) {
+  return disposable(areaKey, rateKey) * rateVal(rateKey);
+}
+
+function bestArea(rateKey) {
+  return Object.keys(AREAS).reduce((b, k) =>
+    disposable(k, rateKey) > disposable(b, rateKey) ? k : b, 'zone1');
+}
+
+// ═══════════════════════════════════════════════
+//  PANELS
+// ═══════════════════════════════════════════════
+function switchPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'detail')   { renderDetailPanel(); }
+  if (name === 'matrix')   { renderMatrix(); }
+  if (name === 'tracker')  { renderTracker(); }
+}
+
+// ═══════════════════════════════════════════════
+//  RATE
+// ═══════════════════════════════════════════════
+function setRate(key) {
+  currentRate = key;
+  document.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('rbtn-' + key).classList.add('active');
+  document.getElementById('igbp').textContent = '£' + Math.round(incomeGBP()).toLocaleString();
+  document.getElementById('rate-applied').textContent = '¥' + rateVal() + ' / £1';
+  renderAreaGrid();
+  renderCashFlow();
+  if (document.getElementById('panel-matrix').classList.contains('active')) renderMatrix();
+  if (document.getElementById('panel-detail').classList.contains('active')) renderDetailPanel();
+}
+
+// ═══════════════════════════════════════════════
+//  AREA GRID
+// ═══════════════════════════════════════════════
+function renderAreaGrid() {
+  const best = bestArea(currentRate);
+  const grid = document.getElementById('area-grid');
+  grid.innerHTML = Object.entries(AREAS).map(([k, a]) => {
+    const exp = localExpenses(k);
+    const fixd = totalFixed();
+    const total = exp + fixd;
+    const disp = disposable(k);
+    const dispJPY = Math.round(disp * rateVal());
+    const isActive = k === selectedArea;
+    const isBest = k === best;
+    const dispPos = disp >= 0;
+
+    const lines = [
+      ['家賃', '£' + a.expenses.rent.val],
+      ['SOHO Works', '£' + a.expenses.workspace.val],
+      ['交通費', '£' + a.expenses.transport.val],
+      ['食費計', '£' + (a.expenses.groceries.val + a.expenses.dining.val)],
+      ...(fixd > 0 ? [['固定費（JP+UK）', '£' + Math.round(fixd).toLocaleString()]] : []),
+      ['月間支出 計', '£' + Math.round(total).toLocaleString(), 'total'],
+    ];
+
+    const dispColor = dispPos
+      ? (isActive ? '#7DC87A' : 'var(--pos)')
+      : (isActive ? '#E89090' : 'var(--neg)');
+
+    return `<div class="area-col${isActive ? ' active' : ''}" onclick="selectArea('${k}')">
+      ${isBest ? '<div class="area-best-mark">Best Value</div>' : ''}
+      <span class="area-tag">${a.tag}</span>
+      <div class="area-col-name">${a.name}</div>
+      <div class="area-col-sub">${a.sub}</div>
+      <div class="area-lines">
+        ${lines.map(([l,v,cls]) => `
+          <div class="area-line">
+            <span class="aline-label">${l}</span>
+            <span class="aline-val${cls ? ' '+cls : ''}">${v}</span>
+          </div>`).join('')}
+      </div>
+      <div class="area-disp">
+        <div class="area-disp-label">月間手取り（可処分）</div>
+        <div class="area-disp-gbp" style="color:${dispColor}">£${Math.round(disp).toLocaleString()}</div>
+        <div class="area-disp-jpy">≈ ¥${dispJPY.toLocaleString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectArea(k) {
+  selectedArea = k;
+  renderAreaGrid();
+  renderCashFlow();
+}
+
+// ═══════════════════════════════════════════════
+//  DETAIL PANEL
+// ═══════════════════════════════════════════════
+function renderDetailPanel() {
+  // Area selector
+  const sel = document.getElementById('area-selector');
+  sel.innerHTML = Object.entries(AREAS).map(([k, a]) =>
+    `<button class="asel-btn${k === selectedArea ? ' active' : ''}" onclick="selectDetailArea('${k}',this)">${a.name}</button>`
+  ).join('');
+  renderExpEditor();
+  updateCharts();
+}
+
+function selectDetailArea(k, btn) {
+  selectedArea = k;
+  document.querySelectorAll('.asel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderExpEditor();
+  updateCharts();
+}
+
+function renderExpEditor() {
+  const area = AREAS[selectedArea];
+  const editor = document.getElementById('exp-editor');
+
+  const rows = Object.entries(area.expenses).map(([k, e]) => {
+    const locked = e.locked ? `<span class="exp-tbd">固定</span>` : '';
+    return `<tr class="exp-row">
+      <td><span class="exp-ico">${e.ico}</span></td>
+      <td>
+        <div class="exp-name-cell">${e.lbl}${locked}</div>
+        <div class="exp-note-cell">${e.note}</div>
+      </td>
+      <td class="exp-input-wrap">
+        <span class="exp-prefix">£</span>
+        <input class="exp-input" type="number" min="0" value="${e.val}"
+          ${e.locked ? 'style="color:var(--muted)"' : ''}
+          onchange="updateExp('${selectedArea}','${k}',this.value)"
+          oninput="updateExp('${selectedArea}','${k}',this.value)">
+      </td>
+    </tr>`;
+  }).join('');
+
+  const fixd = totalFixed();
+  const local = localExpenses(selectedArea);
+  const total = local + fixd;
+  const disp = disposable(selectedArea);
+  const dispPos = disp >= 0;
+
+  editor.innerHTML = `
+    <table class="exp-table">
+      <thead><tr>
+        <th style="width:36px"></th>
+        <th>項目</th>
+        <th style="text-align:right">金額 (£/月)</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${fixd > 0 ? `
+    <div class="totals-block">
+      <div class="total-row">
+        <span class="total-lbl">現地支出</span>
+        <span class="total-amt">£${Math.round(local).toLocaleString()}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-lbl">日本側固定費（換算）</span>
+        <span class="total-amt">£${Math.round(fixd).toLocaleString()}</span>
+      </div>
+    </div>` : ''}
+    <div class="totals-block">
+      <div class="total-row">
+        <span class="total-lbl">月間支出 合計</span>
+        <span class="total-amt neg" id="d-total">£${Math.round(total).toLocaleString()}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-lbl">月間手取り（可処分）</span>
+        <span class="total-amt ${dispPos ? 'pos' : 'neg'}" id="d-disp">£${Math.round(disp).toLocaleString()}</span>
+      </div>
+    </div>`;
+}
+
+function updateExp(areaKey, expKey, val) {
+  AREAS[areaKey].expenses[expKey].val = parseFloat(val) || 0;
+  const total = localExpenses(areaKey) + totalFixed();
+  const disp = disposable(areaKey);
+  const t = document.getElementById('d-total');
+  const d = document.getElementById('d-disp');
+  if (t) t.textContent = '£' + Math.round(total).toLocaleString();
+  if (d) {
+    d.textContent = '£' + Math.round(disp).toLocaleString();
+    d.className = 'total-amt ' + (disp >= 0 ? 'pos' : 'neg');
+  }
+  renderAreaGrid();
+  if (document.getElementById('panel-matrix').classList.contains('active')) renderMatrix();
+  updateCharts();
+}
+
+// ═══════════════════════════════════════════════
+//  CHARTS
+// ═══════════════════════════════════════════════
+const CHART_COLORS = [
+  '#1C1917','#5C5751','#8C867E','#B8B2AA',
+  '#3D5C38','#6B8E5F','#7A3535','#C47A5A','#C8C0B6'
+];
+
+function updateCharts() {
+  const area = AREAS[selectedArea];
+  const labels = Object.values(area.expenses).map(e => e.lbl);
+  const data   = Object.values(area.expenses).map(e => e.val);
+  const inc    = Math.round(incomeGBP());
+  const total  = Math.round(localExpenses(selectedArea) + totalFixed());
+  const disp   = Math.max(0, Math.round(disposable(selectedArea)));
+
+  // Donut
+  if (donutChart) donutChart.destroy();
+  const c1 = document.getElementById('donut-chart');
+  if (c1) {
+    donutChart = new Chart(c1, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 6 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => ` £${c.parsed} (${((c.parsed/total)*100).toFixed(0)}%)` } }
+        }
+      }
+    });
+  }
+
+  // Bar
+  if (barChart) barChart.destroy();
+  const c2 = document.getElementById('bar-chart');
+  if (c2) {
+    barChart = new Chart(c2, {
+      type: 'bar',
+      data: {
+        labels: ['収入', '支出', '手取り'],
+        datasets: [{ data: [inc, total, disp], backgroundColor: ['#3D5C38','#7A3535','#8C867E'], borderRadius: 2, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` £${c.parsed.y.toLocaleString()}` } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#8C867E', font: { family: 'Inter', size: 11 } } },
+          y: { grid: { color: '#E2DDD7' }, ticks: { color: '#8C867E', font: { family: 'Inter', size: 11 }, callback: v => '£' + v } }
+        }
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  MATRIX
+// ═══════════════════════════════════════════════
+function renderMatrix() {
+  const rateKeys = ['pos','base','neg'];
+  const areaKeys = Object.keys(AREAS);
+  const all = areaKeys.flatMap(a => rateKeys.map(r => disposable(a,r)));
+  const maxV = Math.max(...all), minV = Math.min(...all);
+  const table = document.getElementById('mx-table');
+
+  const head = `<thead><tr>
+    <th>エリア</th>
+    ${rateKeys.map(r => `<th>${RATES[r].label}<br><span style="font-weight:400">${RATES[r].desc}</span></th>`).join('')}
+    <th>現地支出</th>
+  </tr></thead>`;
+
+  const body = `<tbody>${areaKeys.map(a => {
+    const area = AREAS[a];
+    const exp = Math.round(localExpenses(a));
+    const isBest  = rateKeys.some(r => disposable(a,r) === maxV);
+    const isWorst = rateKeys.some(r => disposable(a,r) === minV);
+    const rowCls = isBest ? 'mx-best' : isWorst ? 'mx-worst' : '';
+    return `<tr class="${rowCls}">
+      <td>
+        <div class="mx-area">${area.name}</div>
+        <div class="mx-sub">${area.sub}</div>
+      </td>
+      ${rateKeys.map(r => {
+        const d = Math.round(disposable(a,r));
+        const djpy = Math.round(disposableJPY(a,r));
+        const cls = d > 2200 ? 'mx-pos' : d > 1200 ? 'mx-warn' : 'mx-neg';
+        return `<td>
+          <span class="mx-val ${cls}">£${d.toLocaleString()}</span>
+          <span class="mx-jpy">¥${djpy.toLocaleString()}</span>
+        </td>`;
+      }).join('')}
+      <td><span class="mx-val">£${exp.toLocaleString()}</span></td>
+    </tr>`;
+  }).join('')}</tbody>`;
+
+  table.innerHTML = head + body;
+}
+
+// ═══════════════════════════════════════════════
+//  FIXED COSTS
+// ═══════════════════════════════════════════════
+function openFixedModal() {
+  const jpRows = document.getElementById('jp-fixed-rows');
+  const ukRows = document.getElementById('uk-fixed-rows');
+  // グループヘッダー付きでレンダリング
+  let jpHtml = '';
+  let lastGroup = null;
+  JP_FIXED.forEach(f => {
+    if (f.group !== lastGroup) {
+      jpHtml += `<div class="fixed-section-title">${f.group}</div>`;
+      lastGroup = f.group;
+    }
+    jpHtml += `<div class="fixed-row">
+      <div><div class="fixed-row-label">${f.lbl}</div><div class="fixed-row-sub">${f.note}</div></div>
+      <div class="fixed-input-wrap">
+        <span class="fixed-pfx">¥</span>
+        <input class="fixed-input" id="jp-${f.id}" type="number" min="0" value="${f.val || ''}" placeholder="—">
+      </div>
+    </div>`;
+  });
+  jpRows.innerHTML = jpHtml;
+  ukRows.innerHTML = UK_FIXED.map(f => `
+    <div class="fixed-row">
+      <div><div class="fixed-row-label">${f.lbl}</div><div class="fixed-row-sub">${f.note}</div></div>
+      <div class="fixed-input-wrap">
+        <span class="fixed-pfx">£</span>
+        <input class="fixed-input" id="uk-${f.id}" type="number" min="0" value="${f.val || ''}" placeholder="—">
+      </div>
+    </div>`).join('');
+  document.getElementById('fixed-overlay').classList.add('open');
+}
+function closeFixedModal() {
+  document.getElementById('fixed-overlay').classList.remove('open');
+}
+function saveFixedCosts() {
+  JP_FIXED.forEach(f => { f.val = parseFloat(document.getElementById('jp-'+f.id).value) || 0; });
+  UK_FIXED.forEach(f => { f.val = parseFloat(document.getElementById('uk-'+f.id).value) || 0; });
+  closeFixedModal();
+  const hasFixed = [...JP_FIXED, ...UK_FIXED].some(f => f.val > 0);
+  document.getElementById('fixed-banner').style.borderLeftColor = hasFixed ? 'var(--pos)' : 'var(--warn)';
+  document.querySelector('.fixed-banner-title').textContent = hasFixed ? '固定費が反映されました' : '固定費が未入力です';
+  renderAreaGrid();
+  if (document.getElementById('panel-matrix').classList.contains('active')) renderMatrix();
+  if (document.getElementById('panel-detail').classList.contains('active')) renderDetailPanel();
+}
+
+// ═══════════════════════════════════════════════
+//  TRACKER
+// ═══════════════════════════════════════════════
+const CAT_ICO = { '収入':'💴','家賃':'🏠','食費':'🛒','外食':'🍜','交通費':'🚇','ワーキングスペース':'💻','光熱費':'💡','通信費':'📱','エンタメ':'🎭','日本側固定費':'🗾','その他':'📦' };
+const CATS = Object.keys(CAT_ICO);
+
+function getEntries() { return JSON.parse(localStorage.getItem('lbp-entries') || '[]'); }
+function setEntries(e) { localStorage.setItem('lbp-entries', JSON.stringify(e)); }
+
+function renderTracker() {
+  const ym = `${currentMonth.getFullYear()}年${currentMonth.getMonth()+1}月`;
+  document.getElementById('month-label').textContent = ym;
+
+  const all = getEntries().filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === currentMonth.getFullYear() && d.getMonth() === currentMonth.getMonth();
+  });
+  const inc  = all.filter(e => e.type === 'inc').reduce((s,e) => s + e.amount, 0);
+  const exp  = all.filter(e => e.type === 'exp').reduce((s,e) => s + e.amount, 0);
+  const bal  = inc - exp;
+
+  document.getElementById('t-summary').innerHTML = `
+    <div class="t-sum-item"><div class="t-sum-lbl">収入</div><div class="t-sum-val pos">£${inc.toFixed(2)}</div></div>
+    <div class="t-sum-item"><div class="t-sum-lbl">支出</div><div class="t-sum-val neg">£${exp.toFixed(2)}</div></div>
+    <div class="t-sum-item"><div class="t-sum-lbl">収支</div><div class="t-sum-val ${bal>=0?'pos':'neg'}">£${bal.toFixed(2)}</div></div>
+    <div class="t-sum-item"><div class="t-sum-lbl">件数</div><div class="t-sum-val">${all.length}</div></div>`;
+
+  // Filter row
+  const filterBtns = ['all', ...CATS].map(c =>
+    `<button class="filt-btn${currentFilter===c?' active':''}" onclick="setFilter('${c}',this)">${c==='all'?'すべて':CAT_ICO[c]+' '+c}</button>`
+  ).join('');
+  document.getElementById('filter-row').innerHTML = filterBtns;
+
+  // Entries
+  const filtered = currentFilter === 'all' ? all : all.filter(e => e.cat === currentFilter);
+  const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
+  const area = document.getElementById('entries-area');
+  if (sorted.length === 0) {
+    area.innerHTML = `<div class="empty-block"><div class="e-icon">—</div>記録がありません<br>「＋ 記録を追加」から入力してください</div>`;
+    return;
+  }
+  area.innerHTML = `<table class="entries-table">
+    <thead><tr><th></th><th>項目</th><th>カテゴリ</th><th>日付</th><th>金額</th><th></th></tr></thead>
+    <tbody>${sorted.map(e => {
+      const ico = CAT_ICO[e.cat] || '📦';
+      const d = new Date(e.date);
+      const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+      return `<tr>
+        <td><span class="e-ico">${ico}</span></td>
+        <td><div class="e-name">${e.name||e.cat}</div></td>
+        <td><div class="e-cat">${e.cat}</div></td>
+        <td class="e-date">${dateStr}</td>
+        <td class="e-amt ${e.type==='inc'?'pos':'neg'}">${e.type==='inc'?'+':'-'}£${e.amount.toFixed(2)}</td>
+        <td class="e-del"><button onclick="deleteEntry('${e.id}')">✕</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function changeMonth(d) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + d, 1);
+  renderTracker();
+}
+function setFilter(f, el) {
+  currentFilter = f;
+  renderTracker();
+}
+
+// ─── ENTRY MODAL ───
+function openEntryModal() {
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('e-name').value = '';
+  document.getElementById('e-amount').value = '';
+  document.getElementById('entry-overlay').classList.add('open');
+}
+function closeEntryModal() { document.getElementById('entry-overlay').classList.remove('open'); }
+function setEntryType(t) {
+  entryType = t;
+  document.querySelectorAll('.type-opt').forEach(b => b.classList.remove('active'));
+  document.getElementById('type-' + t).classList.add('active');
+}
+function saveEntry() {
+  const amt = parseFloat(document.getElementById('e-amount').value);
+  const date = document.getElementById('e-date').value;
+  if (!amt || !date) { alert('金額と日付は必須です'); return; }
+  const entries = getEntries();
+  entries.push({ id: Date.now().toString(), type: entryType, name: document.getElementById('e-name').value, cat: document.getElementById('e-cat').value, amount: amt, date });
+  setEntries(entries);
+  closeEntryModal();
+  renderTracker();
+}
+function deleteEntry(id) {
+  if (!confirm('削除しますか？')) return;
+  setEntries(getEntries().filter(e => e.id !== id));
+  renderTracker();
+}
+
+// Overlay close on bg click
+['entry-overlay','fixed-overlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) e.target.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════
+//  CASH FLOW
+// ═══════════════════════════════════════════════
+function renderCashFlow() {
+  const wrap = document.getElementById('cf-table-wrap');
+  if (!wrap) return;
+  const r = rateVal();
+  const monthlyDisp = disposable(selectedArea);
+  const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const START = 4; // April = index 3 → month 4
+
+  // Build rows for April–December 2026
+  let cumulative = 0;
+  const rows = [];
+  for (let mn = START; mn <= 12; mn++) {
+    const plan = PLANNED.find(p => p.month === mn);
+    const travelGBP = plan ? Math.round(plan.jpy / r) : 0;
+    const travelJPY = plan ? plan.jpy : 0;
+    const net = Math.round(monthlyDisp) - travelGBP;
+    cumulative += net;
+    rows.push({ mn, label: MONTHS[mn-1], plan, travelGBP, travelJPY, net, cumulative });
+  }
+
+  const travelTotal = PLANNED.reduce((s,p) => s + p.jpy, 0);
+  const travelTotalGBP = Math.round(travelTotal / r);
+
+  wrap.innerHTML = `
+    <div style="border:1px solid var(--border);background:var(--white);overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:560px">
+        <thead>
+          <tr style="background:var(--bg)">
+            <th style="text-align:left;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">月</th>
+            <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">通常手取り</th>
+            <th style="text-align:left;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">旅行予定</th>
+            <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">旅行費（£）</th>
+            <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">月次収支</th>
+            <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">累計残高</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row => {
+            const isCurrent = row.mn === 4;
+            const netPos = row.net >= 0;
+            const cumPos = row.cumulative >= 0;
+            const rowBg = row.plan ? 'background:rgba(122,96,40,0.03)' : '';
+            const currentStyle = isCurrent ? 'border-left:2px solid var(--text)' : '';
+            return `<tr style="${rowBg};${currentStyle}">
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);font-size:0.85rem;font-weight:${isCurrent?'600':'400'};color:var(--text)">
+                2026年${row.label}${isCurrent ? ' <span style="font-size:0.65rem;color:var(--muted);font-weight:400">← 現在</span>' : ''}
+              </td>
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--pos)">
+                £${Math.round(monthlyDisp).toLocaleString()}
+              </td>
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--text)">
+                ${row.plan ? `${row.plan.emoji} ${row.plan.lbl}<span style="display:block;font-size:0.7rem;color:var(--muted)">¥${row.travelJPY.toLocaleString()}</span>` : '<span style="color:var(--faint)">—</span>'}
+              </td>
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:${row.plan ? 'var(--neg)' : 'var(--faint)'}">
+                ${row.plan ? `£${row.travelGBP.toLocaleString()}` : '—'}
+              </td>
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:${netPos ? 'var(--pos)' : 'var(--neg)'}">
+                ${netPos ? '+' : ''}£${row.net.toLocaleString()}
+              </td>
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:${cumPos ? 'var(--text)' : 'var(--neg)'}">
+                ${cumPos ? '' : ''}£${row.cumulative.toLocaleString()}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--bg)">
+            <td colspan="2" style="padding:14px 20px;font-size:0.78rem;font-weight:600;color:var(--muted);border-top:1px solid var(--border-dk)">旅行合計（4〜12月）</td>
+            <td style="padding:14px 20px;font-size:0.78rem;color:var(--muted);border-top:1px solid var(--border-dk)">¥${travelTotal.toLocaleString()}</td>
+            <td style="padding:14px 20px;text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:var(--neg);border-top:1px solid var(--border-dk)">£${travelTotalGBP.toLocaleString()}</td>
+            <td colspan="2" style="padding:14px 20px;text-align:right;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border-dk)">累計 £${rows[rows.length-1].cumulative.toLocaleString()}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
+// ─── INIT ───
+// 固定費が初期値で入っているのでバナーを更新
+(function initBanner() {
+  const hasFixed = [...JP_FIXED, ...UK_FIXED].some(f => f.val > 0);
+  if (hasFixed) {
+    document.getElementById('fixed-banner').style.borderLeftColor = 'var(--pos)';
+    document.querySelector('.fixed-banner-title').textContent = '固定費を反映中（タップで編集）';
+    document.querySelector('.fixed-banner-sub').textContent =
+      `月額合計 ¥${JP_FIXED.reduce((s,f)=>s+f.val,0).toLocaleString()} ／ ` +
+      `GBP換算 £${Math.round(jpFixedGBP()).toLocaleString()}（¥${RATES[currentRate].val}/£）`;
+  }
+})();
+renderAreaGrid();
+renderCashFlow();
+</script>
+</body>
+</html>
