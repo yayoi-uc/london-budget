@@ -35,12 +35,12 @@ body {
   line-height: 1.6;
 }
 
-/* ─── UI要素のみ Inter に戻す ─── */
+/* ─── UIラベル・ボタンのみ Inter ─── */
 .nav-btn, .rate-btn, .rate-btn .rsub, .label,
 .area-tag, .area-best-mark, .area-col-sub,
-.area-disp-label, .area-disp-jpy, .area-line,
+.area-disp-label, .area-disp-jpy, .aline-label,
 .header-meta, .income-row .ilabel, .income-row .iconv,
-.chart-lbl, .mx-sub, .mx-jpy, .t-sum-lbl,
+.chart-lbl, .mx-sub, .t-sum-lbl,
 .filt-btn, .add-entry-btn, .month-btn, .asel-btn,
 .m-cancel, .m-save, .type-opt, .mform-label, .mform-input, .mform-select,
 .fixed-section-title, .fixed-row-sub, .fixed-banner-btn,
@@ -681,14 +681,14 @@ const RATES = {
 };
 
 const AREAS = {
-  zone1: {
-    name: 'Zone 1',
-    sub: 'Shoreditch・East London',
-    tag: 'ZONE 1',
+  pottst: {
+    name: 'Pott St',
+    sub: '65 Pott St · E2 0EG',
+    tag: 'BETHNAL GREEN · ZONE 2',
     expenses: {
-      rent:      { lbl: '家賃', note: 'シェアハウス・Shoreditch周辺', ico: '🏠', val: 950 },
-      workspace: { lbl: 'SOHO Works', note: 'Shoreditch 月額メンバー（週5）', ico: '💻', val: 300, locked: true },
-      transport: { lbl: '交通費', note: 'Oyster・近距離のみ', ico: '🚇', val: 50 },
+      rent:      { lbl: '家賃', note: '65 Pott St, E2 0EG', ico: '🏠', val: 930 },
+      workspace: { lbl: 'Shoreditch House', note: 'SOHO HOUSE 月額メンバー（週5）', ico: '💻', val: 292, locked: true },
+      transport: { lbl: '交通費', note: '徒歩10-15分 通勤不要・近距離のみ', ico: '🚇', val: 20 },
       groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 350 },
       dining:    { lbl: '外食・カフェ', note: 'Shoreditch周辺（高め）', ico: '🍜', val: 200 },
       phone:     { lbl: '通信費（UK）', note: 'SIM only', ico: '📱', val: 30 },
@@ -697,30 +697,30 @@ const AREAS = {
       misc:      { lbl: '雑費', note: '衛生用品・突発出費', ico: '📦', val: 100 },
     }
   },
-  zone3: {
-    name: 'Zone 3',
-    sub: '郊外・Overground圏',
-    tag: 'ZONE 3',
+  sagest: {
+    name: 'Sage St',
+    sub: 'Sage St · E1 0DN',
+    tag: 'SHADWELL · ZONE 1-2',
     expenses: {
-      rent:      { lbl: '家賃', note: 'シェアハウス・Zone 3相場', ico: '🏠', val: 800 },
-      workspace: { lbl: 'SOHO Works', note: 'Shoreditch 月額メンバー（週5）', ico: '💻', val: 300, locked: true },
-      transport: { lbl: '交通費（定期）', note: 'Zone 1-3 Travelcard 月額', ico: '🚇', val: 175 },
-      groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 320 },
-      dining:    { lbl: '外食・カフェ', note: 'ランチ中心', ico: '🍜', val: 180 },
+      rent:      { lbl: '家賃', note: 'Sage St, E1 0DN', ico: '🏠', val: 815 },
+      workspace: { lbl: 'Shoreditch House', note: 'SOHO HOUSE 月額メンバー（週5）', ico: '💻', val: 292, locked: true },
+      transport: { lbl: '交通費', note: '徒歩25-30分 or バス（Oyster）', ico: '🚇', val: 50 },
+      groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 330 },
+      dining:    { lbl: '外食・カフェ', note: 'Whitechapel周辺', ico: '🍜', val: 180 },
       phone:     { lbl: '通信費（UK）', note: 'SIM only', ico: '📱', val: 30 },
-      utilities: { lbl: '光熱費・Wi-Fi', note: '別途請求が多い', ico: '💡', val: 65 },
+      utilities: { lbl: '光熱費・Wi-Fi', note: '別途請求の場合あり', ico: '💡', val: 70 },
       entertain: { lbl: 'エンタメ・人脈', note: 'イベント・ネットワーキング', ico: '🎭', val: 150 },
       misc:      { lbl: '雑費', note: '衛生用品・突発出費', ico: '📦', val: 100 },
     }
   },
   pymmes: {
     name: 'Pymmes Green',
-    sub: '69 Pymmes Green Rd · N11',
-    tag: 'N11 · ZONE 3–4',
+    sub: '69 Pymmes Green Rd',
+    tag: 'EDMONTON · ZONE 4',
     expenses: {
-      rent:      { lbl: '家賃（この物件）', note: '69 Pymmes Green Rd（内装◎）', ico: '🏠', val: 800 },
-      workspace: { lbl: 'SOHO Works', note: 'Shoreditch 月額メンバー（週5）', ico: '💻', val: 300, locked: true },
-      transport: { lbl: '交通費（定期）', note: 'Zone 1-4 Travelcard 月額', ico: '🚇', val: 205 },
+      rent:      { lbl: '家賃', note: '69 Pymmes Green Rd', ico: '🏠', val: 800 },
+      workspace: { lbl: 'Shoreditch House', note: 'SOHO HOUSE 月額メンバー（週5）', ico: '💻', val: 292, locked: true },
+      transport: { lbl: '交通費（定期）', note: 'Zone 1-4 Travelcard £247/月', ico: '🚇', val: 247 },
       groceries: { lbl: '食料品', note: 'スーパー・自炊メイン', ico: '🛒', val: 310 },
       dining:    { lbl: '外食・カフェ', note: 'ランチ中心', ico: '🍜', val: 170 },
       phone:     { lbl: '通信費（UK）', note: 'SIM only', ico: '📱', val: 30 },
@@ -763,7 +763,7 @@ const PLANNED = [
 ];
 
 let currentRate = 'base';
-let selectedArea = 'zone1';
+let selectedArea = 'pottst';
 let currentFilter = 'all';
 let entryType = 'inc';
 let currentMonth = new Date(2026, 3, 1);
@@ -799,7 +799,7 @@ function disposableJPY(areaKey, rateKey) {
 
 function bestArea(rateKey) {
   return Object.keys(AREAS).reduce((b, k) =>
-    disposable(k, rateKey) > disposable(b, rateKey) ? k : b, 'zone1');
+    disposable(k, rateKey) > disposable(b, rateKey) ? k : b, 'pottst');
 }
 
 // ═══════════════════════════════════════════════
