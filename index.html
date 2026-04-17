@@ -570,22 +570,22 @@ header {
   <div id="panel-sim" class="panel active fade-up">
 
     <!-- Rate -->
-    <span class="label">為替レートシナリオ — 2026年予測</span>
+    <span class="label">為替レートシナリオ — 現在 ¥215/£ 基準</span>
     <div class="rate-strip">
       <button class="rate-btn" id="rbtn-pos" onclick="setRate('pos')">
-        円高シナリオ
-        <span class="rbig">¥170 <span style="font-size:1rem;color:inherit">/£</span></span>
-        <span class="rsub">日銀利上げ・ドル安局面</span>
+        円安シナリオ
+        <span class="rbig">¥220 <span style="font-size:1rem;color:inherit">/£</span></span>
+        <span class="rsub">ポンド高・円安継続</span>
       </button>
       <button class="rate-btn active" id="rbtn-base" onclick="setRate('base')">
         ベースライン
-        <span class="rbig">¥190 <span style="font-size:1rem;color:inherit">/£</span></span>
-        <span class="rsub">2026年市場コンセンサス</span>
+        <span class="rbig">¥215 <span style="font-size:1rem;color:inherit">/£</span></span>
+        <span class="rsub">現在のレート水準</span>
       </button>
       <button class="rate-btn" id="rbtn-neg" onclick="setRate('neg')">
-        円安シナリオ
-        <span class="rbig">¥215 <span style="font-size:1rem;color:inherit">/£</span></span>
-        <span class="rsub">米金利高止まり継続</span>
+        円高シナリオ
+        <span class="rbig">¥210 <span style="font-size:1rem;color:inherit">/£</span></span>
+        <span class="rsub">日銀利上げ・円高方向</span>
       </button>
     </div>
 
@@ -775,9 +775,9 @@ header {
 const INCOME_JPY = 800000;
 
 const RATES = {
-  pos:  { val: 170, label: '円高', desc: '¥170/£' },
-  base: { val: 190, label: 'ベースライン', desc: '¥190/£' },
-  neg:  { val: 215, label: '円安', desc: '¥215/£' },
+  pos:  { val: 220, label: '円安', desc: '¥220/£' },
+  base: { val: 215, label: 'ベースライン', desc: '¥215/£' },
+  neg:  { val: 210, label: '円高', desc: '¥210/£' },
 };
 
 const AREAS = {
