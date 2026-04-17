@@ -536,6 +536,25 @@ header {
 .balance-item-lbl { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
 .balance-item-val { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 500; }
 
+/* ─── SAVE BUTTON ─── */
+.save-bar {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  margin-top: 12px;
+}
+.save-btn {
+  border: 1px solid var(--text); background: var(--text); color: var(--white);
+  font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 10px 24px; cursor: pointer; transition: all 0.2s; border-radius: 2px;
+}
+.save-btn:hover { background: #3A3632; }
+.save-btn.saved { background: var(--pos); border-color: var(--pos); pointer-events: none; }
+.save-msg {
+  font-size: 0.72rem; color: var(--pos); font-family: 'Inter', sans-serif;
+  opacity: 0; transition: opacity 0.3s;
+}
+.save-msg.show { opacity: 1; }
+
 /* ─── UTILS ─── */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.4s ease both; }
@@ -606,7 +625,7 @@ header {
     </div>
 
     <!-- Savings Balance -->
-    <div class="savings-section">
+    <div class="savings-section" style="flex-wrap:wrap">
       <div>
         <div class="savings-label">現在の貯金残高</div>
         <div class="savings-label-main" id="savings-display">未入力</div>
@@ -618,6 +637,10 @@ header {
             oninput="updateSavings(this.value)" onchange="updateSavings(this.value)">
         </div>
         <div class="savings-conv" id="savings-conv"></div>
+        <div class="save-bar" style="margin-top:8px">
+          <span class="save-msg" id="savings-save-msg">保存しました</span>
+          <button class="save-btn" onclick="saveSavings()">保存</button>
+        </div>
       </div>
     </div>
 
@@ -639,7 +662,13 @@ header {
     <div class="travel-section">
       <span class="label">出費計画 — 編集可能</span>
       <div id="travel-editor"></div>
-      <button class="travel-add-btn" onclick="addTravel()">＋ 旅行予定を追加</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <button class="travel-add-btn" onclick="addTravel()">＋ 出費予定を追加</button>
+        <div class="save-bar" style="margin-top:0">
+          <span class="save-msg" id="travel-save-msg">保存しました</span>
+          <button class="save-btn" onclick="saveTravelPlans()">保存</button>
+        </div>
+      </div>
     </div>
 
     <!-- Cash Flow -->
@@ -1068,6 +1097,10 @@ function renderExpEditor() {
         <span class="total-lbl">月間手取り（可処分）</span>
         <span class="total-amt ${dispPos ? 'pos' : 'neg'}" id="d-disp">£${Math.round(disp).toLocaleString()}</span>
       </div>
+    </div>
+    <div class="save-bar">
+      <span class="save-msg" id="area-save-msg">保存しました</span>
+      <button class="save-btn" onclick="saveAreaExpenses()">保存</button>
     </div>`;
 }
 
@@ -1224,11 +1257,13 @@ function closeFixedModal() {
 function saveFixedCosts() {
   JP_FIXED.forEach(f => { f.val = parseFloat(document.getElementById('jp-'+f.id).value) || 0; });
   UK_FIXED.forEach(f => { f.val = parseFloat(document.getElementById('uk-'+f.id).value) || 0; });
+  saveFixedToStorage();
   closeFixedModal();
   const hasFixed = [...JP_FIXED, ...UK_FIXED].some(f => f.val > 0);
   document.getElementById('fixed-banner').style.borderLeftColor = hasFixed ? 'var(--pos)' : 'var(--warn)';
   document.querySelector('.fixed-banner-title').textContent = hasFixed ? '固定費が反映されました' : '固定費が未入力です';
   renderAreaGrid();
+  renderCashFlow();
   if (document.getElementById('panel-matrix').classList.contains('active')) renderMatrix();
   if (document.getElementById('panel-detail').classList.contains('active')) renderDetailPanel();
 }
@@ -1525,8 +1560,89 @@ function deleteTravel(idx) {
   renderCashFlow();
 }
 
+// ═══════════════════════════════════════════════
+//  SAVE / LOAD (localStorage)
+// ═══════════════════════════════════════════════
+function flashSaveMsg(id) {
+  const msg = document.getElementById(id);
+  if (!msg) return;
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
+}
+
+function saveSavings() {
+  localStorage.setItem('lbp-savings', JSON.stringify(savingsJPY));
+  flashSaveMsg('savings-save-msg');
+}
+
+function saveTravelPlans() {
+  localStorage.setItem('lbp-travel', JSON.stringify(PLANNED));
+  flashSaveMsg('travel-save-msg');
+}
+
+function saveAreaExpenses() {
+  const data = {};
+  Object.entries(AREAS).forEach(([k, a]) => {
+    data[k] = {};
+    Object.entries(a.expenses).forEach(([ek, e]) => { data[k][ek] = e.val; });
+  });
+  localStorage.setItem('lbp-areas', JSON.stringify(data));
+  flashSaveMsg('area-save-msg');
+}
+
+function saveFixedToStorage() {
+  localStorage.setItem('lbp-jp-fixed', JSON.stringify(JP_FIXED.map(f => ({ id: f.id, val: f.val }))));
+  localStorage.setItem('lbp-uk-fixed', JSON.stringify(UK_FIXED.map(f => ({ id: f.id, val: f.val }))));
+}
+
+function loadAllFromStorage() {
+  // Savings
+  const savedSavings = localStorage.getItem('lbp-savings');
+  if (savedSavings) {
+    savingsJPY = JSON.parse(savedSavings);
+    document.getElementById('savings-input').value = savingsJPY || '';
+    refreshSavingsDisplay();
+  }
+
+  // Travel plans
+  const savedTravel = localStorage.getItem('lbp-travel');
+  if (savedTravel) {
+    PLANNED = JSON.parse(savedTravel);
+  }
+
+  // Area expenses
+  const savedAreas = localStorage.getItem('lbp-areas');
+  if (savedAreas) {
+    const data = JSON.parse(savedAreas);
+    Object.entries(data).forEach(([k, exps]) => {
+      if (AREAS[k]) {
+        Object.entries(exps).forEach(([ek, val]) => {
+          if (AREAS[k].expenses[ek]) AREAS[k].expenses[ek].val = val;
+        });
+      }
+    });
+  }
+
+  // Fixed costs
+  const savedJP = localStorage.getItem('lbp-jp-fixed');
+  if (savedJP) {
+    JSON.parse(savedJP).forEach(s => {
+      const f = JP_FIXED.find(x => x.id === s.id);
+      if (f) f.val = s.val;
+    });
+  }
+  const savedUK = localStorage.getItem('lbp-uk-fixed');
+  if (savedUK) {
+    JSON.parse(savedUK).forEach(s => {
+      const f = UK_FIXED.find(x => x.id === s.id);
+      if (f) f.val = s.val;
+    });
+  }
+}
+
 // ─── INIT ───
-// 固定費が初期値で入っているのでバナーを更新
+loadAllFromStorage();
+
 (function initBanner() {
   const hasFixed = [...JP_FIXED, ...UK_FIXED].some(f => f.val > 0);
   if (hasFixed) {
