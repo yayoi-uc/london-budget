@@ -459,6 +459,83 @@ header {
 .fixed-input::placeholder { color: var(--faint); font-style: italic; }
 .fixed-pfx { font-size: 0.75rem; color: var(--muted); }
 
+/* ─── SAVINGS INPUT ─── */
+.savings-section {
+  border: 1px solid var(--border);
+  background: var(--white);
+  padding: 24px 28px;
+  margin-bottom: 48px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.savings-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.savings-label-main { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 400; color: var(--text); margin-top: 4px; }
+.savings-input-wrap { display: flex; align-items: center; gap: 6px; }
+.savings-input {
+  width: 140px; text-align: right;
+  background: none; border: none; border-bottom: 1.5px solid var(--border);
+  color: var(--text); font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem; font-weight: 500; padding: 4px 6px;
+  font-variant-numeric: tabular-nums; transition: border-color 0.2s;
+}
+.savings-input:focus { outline: none; border-bottom-color: var(--text); }
+.savings-pfx { font-size: 1rem; color: var(--muted); }
+.savings-conv { font-size: 0.75rem; color: var(--muted); margin-top: 4px; text-align: right; }
+
+/* ─── TRAVEL EDITOR ─── */
+.travel-section { margin-bottom: 48px; }
+.travel-row {
+  display: grid; grid-template-columns: 60px 1fr 120px 40px; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+@media (max-width: 640px) { .travel-row { grid-template-columns: 40px 1fr 100px 36px; gap: 8px; } }
+.travel-month-select {
+  background: none; border: none; border-bottom: 1px solid var(--border);
+  font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+  color: var(--text); padding: 4px 0; cursor: pointer;
+}
+.travel-month-select:focus { outline: none; border-bottom-color: var(--text); }
+.travel-name-input {
+  background: none; border: none; border-bottom: 1px solid var(--border);
+  font-family: 'Inter', sans-serif; font-size: 0.82rem; color: var(--text);
+  padding: 6px 0; transition: border-color 0.2s; width: 100%;
+}
+.travel-name-input:focus { outline: none; border-bottom-color: var(--text); }
+.travel-jpy-input {
+  width: 100%; text-align: right;
+  background: none; border: none; border-bottom: 1px solid var(--border);
+  font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 500;
+  color: var(--text); padding: 4px 2px; transition: border-color 0.2s;
+}
+.travel-jpy-input:focus { outline: none; border-bottom-color: var(--text); }
+.travel-del-btn {
+  background: none; border: none; color: var(--faint); cursor: pointer;
+  font-size: 0.85rem; padding: 4px; transition: color 0.2s;
+}
+.travel-del-btn:hover { color: var(--neg); }
+.travel-add-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px dashed var(--border-dk); background: none; color: var(--muted);
+  font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 10px 18px; cursor: pointer; margin-top: 12px;
+  transition: all 0.2s; border-radius: 2px;
+}
+.travel-add-btn:hover { border-color: var(--text); color: var(--text); }
+.travel-gbp-hint { font-size: 0.7rem; color: var(--faint); text-align: right; margin-top: 2px; }
+
+/* ─── BALANCE DISPLAY ─── */
+.balance-banner {
+  border: 1px solid var(--border);
+  background: var(--white);
+  padding: 20px 28px;
+  margin-top: 24px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+}
+@media (max-width: 640px) { .balance-banner { grid-template-columns: 1fr; gap: 16px; } }
+.balance-item { text-align: center; }
+.balance-item-lbl { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+.balance-item-val { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 500; }
+
 /* ─── UTILS ─── */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.4s ease both; }
@@ -528,6 +605,22 @@ header {
       </div>
     </div>
 
+    <!-- Savings Balance -->
+    <div class="savings-section">
+      <div>
+        <div class="savings-label">現在の貯金残高</div>
+        <div class="savings-label-main" id="savings-display">未入力</div>
+      </div>
+      <div>
+        <div class="savings-input-wrap">
+          <span class="savings-pfx">¥</span>
+          <input class="savings-input" id="savings-input" type="number" min="0" placeholder="0"
+            oninput="updateSavings(this.value)" onchange="updateSavings(this.value)">
+        </div>
+        <div class="savings-conv" id="savings-conv"></div>
+      </div>
+    </div>
+
     <!-- Fixed costs banner -->
     <div class="fixed-banner" id="fixed-banner">
       <div class="fixed-banner-icon">⚠</div>
@@ -541,6 +634,13 @@ header {
     <!-- Areas -->
     <span class="label">居住エリア比較 — クリックで選択</span>
     <div class="area-grid" id="area-grid"></div>
+
+    <!-- Travel Plans -->
+    <div class="travel-section">
+      <span class="label">旅行予定 — 編集可能</span>
+      <div id="travel-editor"></div>
+      <button class="travel-add-btn" onclick="addTravel()">＋ 旅行予定を追加</button>
+    </div>
 
     <!-- Cash Flow -->
     <div style="margin-top:56px">
@@ -756,11 +856,13 @@ const UK_FIXED = [
   { id: 'uk_other',     lbl: 'その他（£）', note: '自由入力',      val: 0 },
 ];
 
-const PLANNED = [
+let PLANNED = [
   { month: 5, lbl: 'コペンハーゲン旅行', emoji: '🇩🇰', jpy: 200000 },
   { month: 6, lbl: 'スリランカ旅行',     emoji: '🇱🇰', jpy: 250000 },
   { month: 8, lbl: 'シチリア旅行',       emoji: '🇮🇹', jpy: 200000 },
 ];
+
+let savingsJPY = 0;
 
 let currentRate = 'base';
 let selectedArea = 'pottst';
@@ -824,7 +926,9 @@ function setRate(key) {
   document.getElementById('rbtn-' + key).classList.add('active');
   document.getElementById('igbp').textContent = '£' + Math.round(incomeGBP()).toLocaleString();
   document.getElementById('rate-applied').textContent = '¥' + rateVal() + ' / £1';
+  refreshSavingsDisplay();
   renderAreaGrid();
+  renderTravelEditor();
   renderCashFlow();
   if (document.getElementById('panel-matrix').classList.contains('active')) renderMatrix();
   if (document.getElementById('panel-detail').classList.contains('active')) renderDetailPanel();
@@ -1256,10 +1360,12 @@ function renderCashFlow() {
 
   const travelTotal = PLANNED.reduce((s,p) => s + p.jpy, 0);
   const travelTotalGBP = Math.round(travelTotal / r);
+  const savingsGBP = savingsJPY > 0 ? Math.round(savingsJPY / r) : 0;
+  const hasSavings = savingsJPY > 0;
 
   wrap.innerHTML = `
     <div style="border:1px solid var(--border);background:var(--white);overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;min-width:560px">
+      <table style="width:100%;border-collapse:collapse;min-width:640px">
         <thead>
           <tr style="background:var(--bg)">
             <th style="text-align:left;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">月</th>
@@ -1267,14 +1373,23 @@ function renderCashFlow() {
             <th style="text-align:left;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">旅行予定</th>
             <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">旅行費（£）</th>
             <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">月次収支</th>
-            <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">累計残高</th>
+            <th style="text-align:right;padding:12px 20px;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border)">${hasSavings ? '残高推移' : '累計残高'}</th>
           </tr>
         </thead>
         <tbody>
+          ${hasSavings ? `<tr style="background:rgba(61,92,56,0.04)">
+            <td colspan="5" style="padding:13px 20px;border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--muted)">
+              💰 開始時の貯金残高 <span style="font-size:0.7rem">（¥${savingsJPY.toLocaleString()} → £換算）</span>
+            </td>
+            <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:var(--pos)">
+              £${savingsGBP.toLocaleString()}
+            </td>
+          </tr>` : ''}
           ${rows.map(row => {
             const isCurrent = row.mn === 4;
             const netPos = row.net >= 0;
-            const cumPos = row.cumulative >= 0;
+            const balanceVal = hasSavings ? savingsGBP + row.cumulative : row.cumulative;
+            const balancePos = balanceVal >= 0;
             const rowBg = row.plan ? 'background:rgba(122,96,40,0.03)' : '';
             const currentStyle = isCurrent ? 'border-left:2px solid var(--text)' : '';
             return `<tr style="${rowBg};${currentStyle}">
@@ -1293,8 +1408,8 @@ function renderCashFlow() {
               <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:${netPos ? 'var(--pos)' : 'var(--neg)'}">
                 ${netPos ? '+' : ''}£${row.net.toLocaleString()}
               </td>
-              <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:${cumPos ? 'var(--text)' : 'var(--neg)'}">
-                ${cumPos ? '' : ''}£${row.cumulative.toLocaleString()}
+              <td style="padding:13px 20px;border-bottom:1px solid var(--border);text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:${balancePos ? 'var(--text)' : 'var(--neg)'}">
+                £${balanceVal.toLocaleString()}
               </td>
             </tr>`;
           }).join('')}
@@ -1304,11 +1419,110 @@ function renderCashFlow() {
             <td colspan="2" style="padding:14px 20px;font-size:0.78rem;font-weight:600;color:var(--muted);border-top:1px solid var(--border-dk)">旅行合計（4〜12月）</td>
             <td style="padding:14px 20px;font-size:0.78rem;color:var(--muted);border-top:1px solid var(--border-dk)">¥${travelTotal.toLocaleString()}</td>
             <td style="padding:14px 20px;text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:var(--neg);border-top:1px solid var(--border-dk)">£${travelTotalGBP.toLocaleString()}</td>
-            <td colspan="2" style="padding:14px 20px;text-align:right;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border-dk)">累計 £${rows[rows.length-1].cumulative.toLocaleString()}</td>
+            <td style="padding:14px 20px;border-top:1px solid var(--border-dk)"></td>
+            <td style="padding:14px 20px;text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;border-top:1px solid var(--border-dk);color:${(hasSavings ? savingsGBP + rows[rows.length-1].cumulative : rows[rows.length-1].cumulative) >= 0 ? 'var(--pos)' : 'var(--neg)'}">
+              ${hasSavings ? '残高 ' : '累計 '}£${(hasSavings ? savingsGBP + rows[rows.length-1].cumulative : rows[rows.length-1].cumulative).toLocaleString()}
+            </td>
           </tr>
         </tfoot>
       </table>
-    </div>`;
+    </div>
+    ${hasSavings ? `
+    <div class="balance-banner" style="margin-top:16px">
+      <div class="balance-item">
+        <div class="balance-item-lbl">開始貯金</div>
+        <div class="balance-item-val" style="color:var(--text)">¥${savingsJPY.toLocaleString()}</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-item-lbl">9ヶ月の収支合計</div>
+        <div class="balance-item-val" style="color:${rows[rows.length-1].cumulative >= 0 ? 'var(--pos)' : 'var(--neg)'}">
+          ${rows[rows.length-1].cumulative >= 0 ? '+' : ''}£${rows[rows.length-1].cumulative.toLocaleString()}
+        </div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-item-lbl">12月末の予測残高</div>
+        <div class="balance-item-val" style="color:${(savingsGBP + rows[rows.length-1].cumulative) >= 0 ? 'var(--pos)' : 'var(--neg)'}">
+          £${(savingsGBP + rows[rows.length-1].cumulative).toLocaleString()}
+          <div style="font-size:0.75rem;color:var(--muted);font-family:'Inter',sans-serif;font-weight:400">≈ ¥${Math.round((savingsGBP + rows[rows.length-1].cumulative) * r).toLocaleString()}</div>
+        </div>
+      </div>
+    </div>` : ''}`;
+}
+
+// ═══════════════════════════════════════════════
+//  SAVINGS
+// ═══════════════════════════════════════════════
+function updateSavings(val) {
+  savingsJPY = parseFloat(val) || 0;
+  const display = document.getElementById('savings-display');
+  const conv = document.getElementById('savings-conv');
+  if (savingsJPY > 0) {
+    display.textContent = '¥' + savingsJPY.toLocaleString();
+    const gbp = Math.round(savingsJPY / rateVal());
+    conv.textContent = '≈ £' + gbp.toLocaleString() + '（¥' + rateVal() + '/£）';
+  } else {
+    display.textContent = '未入力';
+    conv.textContent = '';
+  }
+  renderCashFlow();
+}
+
+function refreshSavingsDisplay() {
+  const display = document.getElementById('savings-display');
+  const conv = document.getElementById('savings-conv');
+  if (savingsJPY > 0) {
+    display.textContent = '¥' + savingsJPY.toLocaleString();
+    const gbp = Math.round(savingsJPY / rateVal());
+    conv.textContent = '≈ £' + gbp.toLocaleString() + '（¥' + rateVal() + '/£）';
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  TRAVEL EDITOR
+// ═══════════════════════════════════════════════
+function renderTravelEditor() {
+  const editor = document.getElementById('travel-editor');
+  const MONTH_OPTS = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}月</option>`).join('');
+  editor.innerHTML = PLANNED.map((p, i) => `
+    <div class="travel-row">
+      <select class="travel-month-select" onchange="updateTravel(${i},'month',this.value)">
+        ${MONTH_OPTS.replace(`value="${p.month}"`, `value="${p.month}" selected`)}
+      </select>
+      <input class="travel-name-input" type="text" value="${p.lbl}" placeholder="旅行先"
+        onchange="updateTravel(${i},'lbl',this.value)">
+      <div>
+        <div class="savings-input-wrap" style="justify-content:flex-end">
+          <span style="font-size:0.75rem;color:var(--muted)">¥</span>
+          <input class="travel-jpy-input" type="number" min="0" value="${p.jpy}" step="10000"
+            onchange="updateTravel(${i},'jpy',this.value)" oninput="updateTravel(${i},'jpy',this.value)">
+        </div>
+        <div class="travel-gbp-hint" id="travel-gbp-${i}">≈ £${Math.round(p.jpy / rateVal()).toLocaleString()}</div>
+      </div>
+      <button class="travel-del-btn" onclick="deleteTravel(${i})" title="削除">✕</button>
+    </div>
+  `).join('');
+}
+
+function updateTravel(idx, field, val) {
+  if (field === 'month') PLANNED[idx].month = parseInt(val);
+  else if (field === 'jpy') PLANNED[idx].jpy = parseFloat(val) || 0;
+  else if (field === 'lbl') PLANNED[idx].lbl = val;
+  // Update GBP hint
+  const hint = document.getElementById('travel-gbp-' + idx);
+  if (hint) hint.textContent = '≈ £' + Math.round(PLANNED[idx].jpy / rateVal()).toLocaleString();
+  renderCashFlow();
+}
+
+function addTravel() {
+  PLANNED.push({ month: 7, lbl: '新しい旅行', emoji: '✈️', jpy: 100000 });
+  renderTravelEditor();
+  renderCashFlow();
+}
+
+function deleteTravel(idx) {
+  PLANNED.splice(idx, 1);
+  renderTravelEditor();
+  renderCashFlow();
 }
 
 // ─── INIT ───
@@ -1324,6 +1538,7 @@ function renderCashFlow() {
   }
 })();
 renderAreaGrid();
+renderTravelEditor();
 renderCashFlow();
 </script>
 </body>
